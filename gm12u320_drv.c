@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2015 Red Hat Inc.
+ * Copyright (C) 2012-2016 Red Hat Inc.
  *
  * This file is subject to the terms and conditions of the GNU General Public
  * License v2. See the file COPYING in the main directory of this archive for
@@ -30,9 +30,7 @@ static const struct file_operations gm12u320_driver_fops = {
 	.read = drm_read,
 	.unlocked_ioctl	= drm_ioctl,
 	.release = drm_release,
-#ifdef CONFIG_COMPAT
 	.compat_ioctl = drm_compat_ioctl,
-#endif
 	.llseek = noop_llseek,
 };
 
@@ -65,7 +63,7 @@ static struct drm_driver driver = {
 };
 
 static int gm12u320_usb_probe(struct usb_interface *interface,
-			 const struct usb_device_id *id)
+			      const struct usb_device_id *id)
 {
 	struct usb_device *udev = interface_to_usbdev(interface);
 	struct drm_device *dev;
@@ -80,8 +78,8 @@ static int gm12u320_usb_probe(struct usb_interface *interface,
 		return 0;
 
 	dev = drm_dev_alloc(&driver, &interface->dev);
-	if (!dev)
-		return -ENOMEM;
+	if (IS_ERR(dev))
+		return PTR_ERR(dev);
 
 	r = drm_dev_register(dev, (unsigned long)udev);
 	if (r)
@@ -105,7 +103,6 @@ static void gm12u320_usb_disconnect(struct usb_interface *interface)
 		return;
 
 	drm_kms_helper_poll_disable(dev);
-	drm_connector_unplug_all(dev);
 	gm12u320_fbdev_unplug(dev);
 	gm12u320_stop_fb_update(dev);
 	drm_unplug_dev(dev);
