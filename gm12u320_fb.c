@@ -125,7 +125,7 @@ static void gm12u320_user_framebuffer_destroy(struct drm_framebuffer *drm_fb)
 	struct gm12u320_framebuffer *fb = to_gm12u320_fb(drm_fb);
 
 	if (fb->obj)
-		drm_gem_object_unreference_unlocked(&fb->obj->base);
+		drm_gem_object_put_unlocked(&fb->obj->base);
 
 	drm_framebuffer_cleanup(drm_fb);
 	kfree(fb);
@@ -207,7 +207,6 @@ static int gm12u320fb_create(struct drm_fb_helper *helper,
 	info->fix.smem_len = size;
 	info->fix.smem_start = (unsigned long)fbdev->fb.obj->vmapping;
 
-	info->flags = FBINFO_DEFAULT | FBINFO_CAN_FORCE_OUTPUT;
 	info->fbops = &gm12u320_fb_ops;
 	drm_fb_helper_fill_fix(info, drm_fb->pitches[0], drm_fb->format->depth);
 	drm_fb_helper_fill_var(info, &fbdev->helper,
@@ -224,7 +223,7 @@ static int gm12u320fb_create(struct drm_fb_helper *helper,
 	return ret;
 
 out_gfree:
-	drm_gem_object_unreference_unlocked(&fbdev->fb.obj->base);
+	drm_gem_object_put_unlocked(&fbdev->fb.obj->base);
 out:
 	return ret;
 }
@@ -243,7 +242,7 @@ static void gm12u320_fbdev_destroy(struct drm_device *dev,
 	drm_fb_helper_fini(&fbdev->helper);
 	drm_framebuffer_unregister_private(&fbdev->fb.base);
 	drm_framebuffer_cleanup(&fbdev->fb.base);
-	drm_gem_object_unreference_unlocked(&fbdev->fb.obj->base);
+	drm_gem_object_put_unlocked(&fbdev->fb.obj->base);
 }
 
 int gm12u320_fbdev_init(struct drm_device *dev)
